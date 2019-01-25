@@ -55,39 +55,10 @@ p<-ggplot(county.data.small) +
                     transition_length = 2,
                     state_length = 1) 
 p
+## GRR ! Getting a weird 'subscript out of bounds' error
 
 
-#add the interesting data from above
-totals_yr<- data.table(filter(totals, year == 2000))
-setkey(totals_yr, fips)
 
-# join the ___ data with the county data.
-county.data <- county.data[totals_yr]  # should be joined on fips
-setkey(county.data, id)
-
-# make the map layer
-map.df<-data.table(fortify(us.counties))
-setkey(map.df,id)
-
-
-# add in interesting data
-map.df<- map.df[county.data]  # should be joined on ID
-
-ggplot(map.df, aes(x=long, y=lat, group = group)) +
-  geom_polygon(aes(fill = per_capita)) +
-  scale_fill_gradientn("",colours=brewer.pal(9,"YlGnBu")) +
-  coord_quickmap()+
-  coord_map("polyconic" ) +
-  theme_void()+
-  geom_polygon(data = us_states, aes(x=long, y=lat, group = group), color = "black", fill = NA)
-
-
-## It would be cool to facet by ethnicity and also produce an over-time annimated gif. 
-
-## New tactic for mapping
-
-map_data<- fortify(us.counties)
-map_data<- left_join(map_data, county.data)
 
 
 ## maybe I should take this chance to gganimate incarceration trends over time? 
