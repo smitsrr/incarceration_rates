@@ -1,6 +1,10 @@
-library(readr); library(dplyr); library(ggplot2); library(rgdal)
-library(data.table); library(RColorBrewer) # for brewer.pal(...)
-library(gganimate)
+library(readr); library(dplyr)
+library(ggplot2); library(rgdal)
+library(data.table)
+library(RColorBrewer) # for brewer.pal(...)
+library(gganimate)    # ggplot animations 
+library(gifski)       # gganimate dependency
+library(transformr)   # gganimate dependency for a polygon
 
 df_raw <- read_csv("https://raw.githubusercontent.com/vera-institute/incarceration_trends/master/incarceration_trends.csv")
 
@@ -16,10 +20,6 @@ totals<- df %>%
   select(year, fips, state, total_pop, 
          total_pop_15to64, total_jail_pop) %>%
   mutate(per_capita = total_jail_pop / total_pop_15to64)
-
-
-
-
 
 #get the shape files from Tiger
 setwd("./tiger_files")
@@ -41,18 +41,20 @@ setkey(totals, fips)
 
 county.data.2<- left_join(totals, county.data, by=c("fips" = "FIPS"))
 county.data.3<- left_join(county.data.2, map.df)
+county.data.small<-filter(county.data.3, year %in% c('1990', '1995', '2000'))
 
-
-p<-ggplot(map.df) +
-  geom_polygon(aes(x = long, y = lat, group = group, fill=per_capita, frame = year)) +
+p<-ggplot(county.data.small) +
+  geom_polygon(aes(x = long, y = lat, group = group, fill=per_capita)) +
   scale_fill_gradientn("",colours=brewer.pal(9,"YlGnBu")) +
   coord_quickmap()+
   coord_map("polyconic" ) +
   theme_void()+
-  geom_polygon(data = us_states, aes(x=long, y=lat, group = group), color = "black", fill = NA)
-# save gif
-gg_animate(p, "total_per_capita.gif", title_frame =T, 
-           ani.width=1600, ani.height=820, dpi=800, interval = .4)
+  geom_polygon(data = us_states, aes(x=long, y=lat, group = group), color = "black", fill = NA) +
+  # gganimate code
+  transition_states(year, 
+                    transition_length = 2,
+                    state_length = 1) 
+p
 
 
 #add the interesting data from above
